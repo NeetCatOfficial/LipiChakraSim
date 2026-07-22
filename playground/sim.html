@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Devanagari Circular Keyboard — Practice</title>
+    <style>
+        :root {
+            --bg: #12161C;
+            --panel: #181D25;
+            --panel-2: #1F2530;
+            --line: #2A313D;
+            --text: #EAF0F6;
+            --muted: #8B96A5;
+            --consonant: #4A90D9;
+            --consonant-dim: #2E5A82;
+            --vowel: #D98E3A;
+            --vowel-dim: #8A5B24;
+            --good: #3FAE6A;
+            --bad: #D9534F;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, "Segoe UI", "Noto Sans Devanagari", "Nirmala UI", sans-serif;
+            overscroll-behavior: none;
+        }
+
+        body {
+            padding: 14px;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 12px;
+        }
+
+        header h1 {
+            font-size: 19px;
+            margin: 0 0 4px;
+            letter-spacing: .2px;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        nav.stages {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 10px 0 12px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        nav.stages::-webkit-scrollbar {
+            display: none;
+        }
+
+        nav.stages button {
+            flex: none;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            white-space: nowrap;
+        }
+
+        nav.stages button.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .prompt {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .prompt .target {
+            font-size: 40px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .prompt .target.word {
+            font-size: 30px;
+        }
+
+        .prompt .meta {
+            text-align: right;
+        }
+
+        .prompt .translit {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .prompt .hint {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .prompt .stat {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .prompt .stat b {
+            color: var(--text);
+        }
+
+        .pads-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin: 4px 0 10px;
+        }
+
+        .pad-wrap {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .pad-wrap canvas {
+            width: 100%;
+            max-width: 220px;
+            aspect-ratio: 1/1;
+            touch-action: none;
+        }
+
+        .pad-caption {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        #liveBadge {
+            flex: none;
+            min-width: 56px;
+            height: 44px;
+            padding: 0 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--muted);
+            transition: background-color .18s ease;
+        }
+
+        .output-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        #typedOutput {
+            flex: 1;
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            min-height: 20px;
+            font-size: 17px;
+            letter-spacing: .5px;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        #typedOutput .cursor {
+            opacity: .55;
+        }
+
+        #wordProgress {
+            display: none;
+        }
+
+        .iconbtn {
+            flex: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .feedback-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        #feedback {
+            font-size: 13px;
+            min-height: 18px;
+        }
+
+        #feedback.good {
+            color: var(--good);
+        }
+
+        #feedback.bad {
+            color: var(--bad);
+        }
+
+        .stats-mini {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        #skipBtn,
+        #clearBtn {
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            color: var(--text);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 12.5px;
+        }
+
+        details.legend {
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        details.legend summary {
+            cursor: pointer;
+            color: var(--text);
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        details.legend ul {
+            margin: 6px 0 0;
+            padding-left: 18px;
+            line-height: 1.6;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 6px;
+        }
+
+        .modebtn {
+            flex: 1;
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            padding: 9px 6px;
+            border-radius: 9px;
+            font-size: 13px;
+        }
+
+        .modebtn.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+            font-weight: 600;
+        }
+
+        #realKeyboardInput {
+            width: 100%;
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 20px;
+            color: var(--text);
+        }
+
+        #realKeyboardInput::placeholder {
+            color: var(--muted);
+        }
+
+        footer {
+            margin: 16px 0 4px;
+            color: var(--muted);
+            font-size: 11.5px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        footer a {
+            color: var(--muted);
+        }
+
+        @media (min-width:420px) {
+            .prompt .target {
+                font-size: 46px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Devanagari Circular Keyboard — Practice</h1>
+        <p>Drag out from the center of each circle toward a direction, then keep dragging to reach deeper members of
+            that group. Same gesture as the real keyboard — build the muscle memory here first.</p>
+    </header>
+
+    <nav class="stages" id="stageNav"></nav>
+
+    <div class="card prompt" id="promptCard">
+        <div>
+            <div class="target" id="targetDisplay">क</div>
+            <div class="translit" id="targetTranslit">ka</div>
+            <div class="hint" id="targetHint"></div>
+        </div>
+        <div class="meta">
+            <div class="stat">Correct <b id="statCorrect">0</b>/<b id="statAttempts">0</b></div>
+            <div class="stat">Streak <b id="statStreak">0</b></div>
+        </div>
+    </div>
+
+    <div class="card" style="padding:8px;">
+        <div class="mode-toggle">
+            <button id="modePadsBtn" class="modebtn active">🖱️ Practice pads</button>
+            <button id="modeRealBtn" class="modebtn">⌨️ My keyboard</button>
+        </div>
+    </div>
+
+    <div class="pads-row" id="padsRow">
+        <div class="pad-wrap">
+            <canvas id="consonantCanvas"></canvas>
+            <div class="pad-caption">व्यंजन — consonants</div>
+        </div>
+        <div id="liveBadge">अ</div>
+        <div class="pad-wrap">
+            <canvas id="vowelCanvas"></canvas>
+            <div class="pad-caption">स्वर — vowels</div>
+        </div>
+    </div>
+
+    <div class="card" id="realKeyboardCard" style="display:none;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+            Tap below and type using your installed keyboard — make sure it's switched to Devanagari Circular Keyboard
+            first.
+        </div>
+        <input id="realKeyboardInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+            placeholder="Tap here to type…" />
+    </div>
+
+    <div class="output-row" id="outputRow">
+        <div id="typedOutput"><span class="cursor">type here…</span></div>
+        <button class="iconbtn" id="backspaceBtn" title="Backspace">⌫</button>
+    </div>
+
+    <div class="card feedback-row">
+        <div>
+            <div id="feedback"></div>
+            <div class="stats-mini" id="stageAccuracy"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button id="clearBtn" style="display:none;">Clear</button>
+            <button id="skipBtn">Skip →</button>
+        </div>
+    </div>
+
+    <details class="legend">
+        <summary>How the gesture works (tap to expand)</summary>
+        <ul>
+            <li><b>Short drag</b> toward a direction previews/commits that group's first letter.</li>
+            <li><b>Drag past ~42% of the radius</b> and it locks onto that group — the rest fan out clockwise starting
+                exactly where you dragged to.</li>
+            <li><b>Vowels</b> use the exact same mechanic and spacing as consonants now — lock in, then sweep clockwise
+                for the next form.</li>
+            <li><b>अ after a consonant</b> inserts halant (्) instead of nothing — that's how conjuncts get built.</li>
+            <li>Return all the way to the center to cancel a drag.</li>
+            <li><b>⌨️ My keyboard mode:</b> practice with your actual installed keyboard instead of the on-screen pads —
+                good for building real muscle memory once the basics feel familiar.</li>
+        </ul>
+    </details>
+
+    <footer>
+        Progress resets on page reload (nothing is saved). To keep this handy on your phone, save it to your home screen
+        from Chrome's menu, or host the file anywhere (GitHub Pages, Netlify Drop, etc.) and bookmark the link.
+    </footer>
+
+    <script>
+        (function () {
+            "use strict";
+
+            // ---------------------------------------------------------------
+            // Data — mirrors DevanagariData.kt / CircularPadView.kt exactly
+            // ---------------------------------------------------------------
+
+            const CONSONANT_GROUPS = [
+                ["त", "थ", "द", "ध", "न"],   // 0 E
+                ["च", "छ", "ज", "झ", "ञ"],   // 1 NE
+                ["क", "ख", "ग", "घ", "ङ"],   // 2 N
+                ["क्ष", "त्र", "ज्ञ", "श्र"], // 3 NW
+                ["श", "ष", "स", "ह"],       // 4 W
+                ["य", "र", "ल", "व"],       // 5 SW
+                ["प", "फ", "ब", "भ", "म"],   // 6 S
+                ["ट", "ठ", "ड", "ढ", "ण"]    // 7 SE
+            ];
+
+            const VOWEL_GROUPS = [
+                ["उ", "ऊ"], // 0 E
+                ["इ", "ई"], // 1 NE
+                ["अ", "आ", "अँ", "ऑ", "अ़"], // 2 N
+                ["ऌ", "ॡ"], // 3 NW
+                ["अं", "अः"], // 4 W
+                ["ओ", "औ"], // 5 SW
+                ["ए", "ऐ"], // 6 S
+                ["ऋ", "ॠ"]  // 7 SE
+            ];
+
+            const VOWEL_MATRA = {
+                "अ": "्", "आ": "ा", "इ": "ि", "ई": "ी", "उ": "ु", "ऊ": "ू",
+                "ऋ": "ृ", "ॠ": "ॄ", "ऌ": "ॢ", "ॡ": "ॣ",
+                "ए": "े", "ऐ": "ै", "ओ": "ो", "औ": "ौ", "अं": "ं", "अः": "ः",
+                "अँ": "ँ", "ऑ": "ॉ",  "अ़":"़"
+            };
+
+            const TRANSLIT = {
+                "क": "ka", "ख": "kha", "ग": "ga", "घ": "gha", "ङ": "nga",
+                "च": "cha", "छ": "chha", "ज": "ja", "झ": "jha", "ञ": "nya",
+                "ट": "Ta", "ठ": "Tha", "ड": "Da", "ढ": "Dha", "ण": "Na",
+                "त": "ta", "थ": "tha", "द": "da", "ध": "dha", "न": "na",
+                "प": "pa", "फ": "pha", "ब": "ba", "भ": "bha", "म": "ma",
+                "य": "ya", "र": "ra", "ल": "la", "व": "va",
+                "श": "sha", "ष": "Sha", "स": "sa", "ह": "ha",
+                "क्ष": "ksha", "त्र": "tra", "ज्ञ": "gya", "श्र": "shra",
+                "अ": "a (→ halant)", "आ": "aa", "इ": "i", "ई": "ii", "उ": "u", "ऊ": "uu",
+                "ऋ": "ri", "ॠ": "rri", "ऌ": "lri", "ॡ": "lrii",
+                "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au", "अं": "an", "अः": "ah",
+                "अँ": "an (nasalized)", "ऑ": "aw (loanword o)", "अ़": "a (nukta)"
+            };
+
+            const ALL_CONSONANTS = [...new Set(CONSONANT_GROUPS.flat())].sort((a, b) => b.length - a.length);
+            const BASE_CONSONANTS = CONSONANT_GROUPS.map(g => g[0]);
+            const DEPTH_CONSONANTS = CONSONANT_GROUPS.flatMap(g => g.slice(1));
+            const BASE_VOWELS = VOWEL_GROUPS.map(g => g[0]);
+            const LONG_VOWELS = VOWEL_GROUPS.map(g => g[1]).filter((v, i) => v !== BASE_VOWELS[i]);
+
+            const WORDS = ["कमल", "समय", "चाय", "घर", "फूल", "केला", "सेब", "पानी", "मकान", "किताब"];
+
+            // ---------------------------------------------------------------
+            // Drag pad (mirrors CircularPadView.kt's math 1:1)
+            // ---------------------------------------------------------------
+
+            function normAngle(dx, dy) {
+                let a = Math.atan2(-dy, dx) * 180 / Math.PI;
+                if (a < 0) a += 360;
+                return a;
+            }
+            function sectorFromAngle(a) { return Math.round(a / 45) % 8; }
+            function clockwiseDelta(anchor, current) {
+                let d = (anchor - current) % 360;
+                if (d < 0) d += 360;
+                return d;
+            }
+            function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+            class DragPad {
+                constructor(canvas, opts) {
+                    this.canvas = canvas;
+                    this.ctx = canvas.getContext("2d");
+                    this.groups = opts.groups;
+                    this.fanStepDeg = opts.fanStepDeg;
+                    this.fanClockwise = opts.fanClockwise !== false;
+                    this.accent = opts.accent;
+                    this.onCharacter = opts.onCharacter || function () { };
+                    this.onPreview = opts.onPreview || function () { };
+
+                    this.deadZoneFrac = 0.16;
+                    this.lockThresholdFrac = 0.42;
+
+                    this.dragging = false; this.dragX = 0; this.dragY = 0;
+                    this.previewChar = null; this.lockedSector = null; this.hoverSector = null; this.fanIndex = -1;
+
+                    this.resize();
+                    window.addEventListener("resize", () => this.resize());
+
+                    canvas.addEventListener("pointerdown", e => this.onDown(e));
+                    canvas.addEventListener("pointermove", e => this.onMove(e));
+                    canvas.addEventListener("pointerup", e => this.onUp(e));
+                    canvas.addEventListener("pointercancel", e => this.onCancel(e));
+                }
+
+                resize() {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const size = rect.width || 220;
+                    const dpr = window.devicePixelRatio || 1;
+                    this.canvas.width = size * dpr;
+                    this.canvas.height = size * dpr;
+                    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    this.cx = size / 2; this.cy = size / 2; this.radius = size / 2 - 8;
+                    this.draw();
+                }
+
+                localXY(e) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    return [e.clientX - rect.left, e.clientY - rect.top];
+                }
+
+                onDown(e) {
+                    this.canvas.setPointerCapture(e.pointerId);
+                    this.dragging = true; this.dragX = 0; this.dragY = 0;
+                    this.previewChar = null; this.hoverSector = null; this.lockedSector = null; this.fanIndex = -1;
+                    this.onPreview(null);
+                    this.draw();
+                }
+
+                onMove(e) {
+                    if (!this.dragging) return;
+                    const [x, y] = this.localXY(e);
+                    let dx = x - this.cx, dy = y - this.cy;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist > this.radius) { const s = this.radius / dist; dx *= s; dy *= s; }
+                    this.dragX = dx; this.dragY = dy;
+                    this.updateDrag(dx, dy);
+                    this.draw();
+                }
+
+                onUp(e) {
+                    if (!this.dragging) return;
+                    this.updateDrag(this.dragX, this.dragY);
+                    const ch = this.previewChar;
+                    this.dragging = false; this.previewChar = null; this.hoverSector = null; this.lockedSector = null; this.fanIndex = -1;
+                    this.draw();
+                    if (ch != null) {
+                        vibrate(15);
+                        this.onCharacter(ch);
+                    } else {
+                        this.onPreview(null);
+                    }
+                }
+
+                onCancel() {
+                    this.dragging = false; this.previewChar = null; this.hoverSector = null; this.lockedSector = null; this.fanIndex = -1;
+                    this.onPreview(null);
+                    this.draw();
+                }
+
+                updateDrag(dx, dy) {
+                    const dist = Math.hypot(dx, dy);
+                    const deadZone = this.radius * this.deadZoneFrac;
+                    const wasLocked = this.lockedSector != null;
+
+                    if (dist < deadZone) {
+                        this.previewChar = null; this.hoverSector = null; this.lockedSector = null; this.fanIndex = -1;
+                    } else {
+                        const angle = normAngle(dx, dy);
+                        const lockThreshold = this.radius * this.lockThresholdFrac;
+                        if (this.lockedSector == null && dist < lockThreshold) {
+                            const sector = sectorFromAngle(angle);
+                            this.hoverSector = sector;
+                            this.previewChar = (this.groups[sector] || [])[0] || null;
+                        } else {
+                            const sector = this.lockedSector != null ? this.lockedSector : sectorFromAngle(angle);
+                            this.lockedSector = sector;
+                            const list = this.groups[sector] || [];
+                            if (list.length === 0) { this.previewChar = null; }
+                            else {
+                                const anchor = sector * 45;
+                                const maxSweep = this.fanStepDeg * (list.length - 1);
+                                const wrongDirectionThreshold = maxSweep + this.fanStepDeg / 2;
+                                let delta = this.fanClockwise ? clockwiseDelta(anchor, angle) : clockwiseDelta(angle, anchor);
+                                if (delta > wrongDirectionThreshold) delta = 0;
+                                const clamped = Math.min(Math.max(delta, 0), maxSweep);
+                                const idx = list.length <= 1 ? 0 : Math.min(list.length - 1, Math.round(clamped / this.fanStepDeg));
+                                this.fanIndex = idx;
+                                this.previewChar = list[idx];
+                            }
+                        }
+                    }
+                    if (!wasLocked && this.lockedSector != null) vibrate(8);
+                    this.onPreview(this.previewChar);
+                }
+
+                fanAngle(anchor, index) {
+                    return this.fanClockwise ? anchor - index * this.fanStepDeg : anchor + index * this.fanStepDeg;
+                }
+
+                drawAt(text, angleDeg, r, color, weight) {
+                    const rad = angleDeg * Math.PI / 180;
+                    const x = this.cx + Math.cos(rad) * r;
+                    const y = this.cy - Math.sin(rad) * r;
+                    const ctx = this.ctx;
+                    ctx.fillStyle = color;
+                    ctx.font = (weight || "400") + " " + Math.round(this.radius * 0.15) + "px sans-serif";
+                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    ctx.fillText(text, x, y);
+                }
+
+                draw() {
+                    const ctx = this.ctx;
+                    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    ctx.strokeStyle = this.accent; ctx.lineWidth = 2.5;
+                    ctx.beginPath(); ctx.arc(this.cx, this.cy, this.radius, 0, Math.PI * 2); ctx.stroke();
+
+                    if (this.lockedSector == null) {
+                        for (let s = 0; s < 8; s++) {
+                            const label = (this.groups[s] || [])[0];
+                            if (!label) continue;
+                            const isHover = this.dragging && this.hoverSector === s;
+                            this.drawAt(label, s * 45, this.radius * 0.78, isHover ? "#FFFFFF" : "#D8DEE8", isHover ? "600" : "400");
+                        }
+                    } else {
+                        const list = this.groups[this.lockedSector] || [];
+                        const anchor = this.lockedSector * 45;
+                        list.forEach((ch, i) => {
+                            const angle = this.fanAngle(anchor, i);
+                            const isHover = i === this.fanIndex;
+                            this.drawAt(ch, angle, this.radius * 0.86, isHover ? "#FFFFFF" : "#D8DEE8", isHover ? "600" : "400");
+                        });
+                    }
+
+                    if (this.dragging) {
+                        const kx = this.cx + this.dragX, ky = this.cy + this.dragY;
+                        ctx.strokeStyle = this.accent; ctx.lineWidth = 3;
+                        ctx.beginPath(); ctx.moveTo(this.cx, this.cy); ctx.lineTo(kx, ky); ctx.stroke();
+                        ctx.fillStyle = this.accent;
+                        ctx.beginPath(); ctx.arc(kx, ky, this.radius * 0.09, 0, Math.PI * 2); ctx.fill();
+                    } else {
+                        ctx.fillStyle = this.accent;
+                        ctx.beginPath(); ctx.arc(this.cx, this.cy, this.radius * 0.09, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+
+                reset() {
+                    this.dragging = false; this.previewChar = null; this.lockedSector = null; this.hoverSector = null; this.fanIndex = -1;
+                    this.draw();
+                }
+            }
+
+            // ---------------------------------------------------------------
+            // Practice text buffer (mirrors DevanagariIME.kt's matra logic)
+            // ---------------------------------------------------------------
+
+            let buffer = "";
+
+            function bareConsonant() {
+                if (!buffer) return null;
+                const tail = buffer.slice(-4);
+                return ALL_CONSONANTS.find(c => tail.endsWith(c)) || null;
+            }
+            function bufferCommitConsonant(ch) { buffer += ch; }
+            function bufferCommitVowel(ch) {
+                const bare = bareConsonant();
+                if (bare) {
+                    const matra = VOWEL_MATRA[ch] || "";
+                    if (matra) buffer += matra;
+                } else {
+                    buffer += ch;
+                }
+            }
+            function bufferBackspace() { buffer = buffer.slice(0, -1); }
+
+            // ---------------------------------------------------------------
+            // Live badge
+            // ---------------------------------------------------------------
+
+            const liveBadge = document.getElementById("liveBadge");
+            let badgeFadeTimer = null;
+
+            function updateLiveBadge(ch, accent) {
+                if (badgeFadeTimer) { clearTimeout(badgeFadeTimer); badgeFadeTimer = null; }
+                if (ch == null) {
+                    liveBadge.textContent = "अ";
+                    liveBadge.style.color = "var(--muted)";
+                    liveBadge.style.background = "rgba(255,255,255,.06)";
+                } else {
+                    liveBadge.textContent = ch;
+                    liveBadge.style.color = accent;
+                    liveBadge.style.background = "rgba(255,255,255,.06)";
+                }
+            }
+            function flashBadge(ch, accent) {
+                if (badgeFadeTimer) { clearTimeout(badgeFadeTimer); badgeFadeTimer = null; }
+                liveBadge.textContent = ch;
+                liveBadge.style.color = accent;
+                liveBadge.style.background = accent + "55";
+                badgeFadeTimer = setTimeout(() => {
+                    liveBadge.textContent = "अ";
+                    liveBadge.style.color = "var(--muted)";
+                    liveBadge.style.background = "rgba(255,255,255,.06)";
+                }, 350);
+            }
+
+            // ---------------------------------------------------------------
+            // Stage definitions
+            // ---------------------------------------------------------------
+
+            const stages = [
+                {
+                    id: "c-dir", label: "1 · Consonant directions", mode: "single", pad: "consonant", pool: BASE_CONSONANTS,
+                    blurb: "Short drag toward each direction. No locking needed yet."
+                },
+                {
+                    id: "c-depth", label: "2 · Consonant depth", mode: "single", pad: "consonant", pool: DEPTH_CONSONANTS,
+                    blurb: "Drag past the lock point, then sweep clockwise to reach this letter."
+                },
+                {
+                    id: "v-dir", label: "3 · Vowel directions", mode: "single", pad: "vowel", pool: BASE_VOWELS,
+                    blurb: "Short drag on the vowel side. Same 8 directions as consonants."
+                },
+                {
+                    id: "v-long", label: "4 · Vowel long forms", mode: "single", pad: "vowel", pool: LONG_VOWELS,
+                    blurb: "Lock in, then sweep clockwise — same spacing as the consonant rows now."
+                },
+                {
+                    id: "combo", label: "5 · Syllable combos", mode: "combo",
+                    blurb: "Drag a consonant, then a vowel, to build this exact syllable."
+                },
+                {
+                    id: "words", label: "6 · Words", mode: "word", pool: WORDS,
+                    blurb: "Type the whole word. Backspace if you go off-track."
+                },
+                {
+                    id: "free", label: "7 · Free practice", mode: "free",
+                    blurb: "No target — just explore. Everything you type shows below."
+                }
+            ];
+
+            let currentStageIndex = 0;
+            let currentTarget = "";
+            let stageStats = {}; // per-stage {correct, attempts}
+            stages.forEach(s => stageStats[s.id] = { correct: 0, attempts: 0 });
+            let streak = 0;
+
+            const stageNav = document.getElementById("stageNav");
+            stages.forEach((s, i) => {
+                const btn = document.createElement("button");
+                btn.textContent = s.label;
+                btn.addEventListener("click", () => selectStage(i));
+                stageNav.appendChild(btn);
+            });
+
+            function renderStageNav() {
+                [...stageNav.children].forEach((btn, i) => btn.classList.toggle("active", i === currentStageIndex));
+            }
+
+            function pickFromPool(pool, avoid) {
+                if (pool.length === 1) return pool[0];
+                let choice;
+                do { choice = pool[Math.floor(Math.random() * pool.length)]; } while (choice === avoid);
+                return choice;
+            }
+
+            let usingRealKeyboard = false;
+
+            function nextTarget() {
+                const stage = stages[currentStageIndex];
+                buffer = "";
+                const realInput = document.getElementById("realKeyboardInput");
+                if (realInput) realInput.value = "";
+                document.getElementById("feedback").textContent = "";
+                document.getElementById("feedback").className = "";
+                if (stage.mode === "single") {
+                    currentTarget = pickFromPool(stage.pool, currentTarget);
+                } else if (stage.mode === "combo") {
+                    const c = CONSONANT_GROUPS.flat()[Math.floor(Math.random() * CONSONANT_GROUPS.flat().length)];
+                    const vAll = [...BASE_VOWELS, ...LONG_VOWELS];
+                    const v = vAll[Math.floor(Math.random() * vAll.length)];
+                    const matra = VOWEL_MATRA[v] || "";
+                    currentTarget = c + matra;
+                } else if (stage.mode === "word") {
+                    currentTarget = pickFromPool(stage.pool, currentTarget);
+                } else {
+                    currentTarget = "";
+                }
+                renderPrompt();
+                renderOutput();
+            }
+
+            function renderPrompt() {
+                const stage = stages[currentStageIndex];
+                const targetEl = document.getElementById("targetDisplay");
+                const translitEl = document.getElementById("targetTranslit");
+                const hintEl = document.getElementById("targetHint");
+                const promptCard = document.getElementById("promptCard");
+
+                if (stage.mode === "free") {
+                    promptCard.style.display = "none";
+                } else {
+                    promptCard.style.display = "flex";
+                }
+
+                if (stage.mode === "single") {
+                    targetEl.className = "target";
+                    targetEl.textContent = currentTarget;
+                    translitEl.textContent = TRANSLIT[currentTarget] || "";
+                    hintEl.textContent = usingRealKeyboard
+                        ? (stage.pad === "consonant" ? "consonant side of your keyboard" : "vowel side of your keyboard")
+                        : (stage.pad === "consonant" ? "consonant pad (left)" : "vowel pad (right)");
+                } else if (stage.mode === "combo") {
+                    targetEl.className = "target";
+                    targetEl.textContent = currentTarget;
+                    translitEl.textContent = "";
+                    hintEl.textContent = "type consonant, then vowel";
+                } else if (stage.mode === "word") {
+                    targetEl.className = "target word";
+                    targetEl.textContent = currentTarget;
+                    translitEl.textContent = "";
+                    hintEl.textContent = "";
+                }
+
+                document.getElementById("statCorrect").textContent = stageStats[stage.id] ? stageStats[stage.id].correct : 0;
+                document.getElementById("statAttempts").textContent = stageStats[stage.id] ? stageStats[stage.id].attempts : 0;
+                document.getElementById("statStreak").textContent = streak;
+
+                const outputRow = document.getElementById("outputRow");
+                const realCard = document.getElementById("realKeyboardCard");
+                if (usingRealKeyboard) {
+                    outputRow.style.display = "none";
+                    realCard.style.display = "block";
+                } else {
+                    realCard.style.display = "none";
+                    outputRow.style.display = (stage.mode === "combo" || stage.mode === "word" || stage.mode === "free") ? "flex" : "none";
+                }
+
+                document.getElementById("clearBtn").style.display = stage.mode === "free" ? "inline-block" : "none";
+                document.getElementById("skipBtn").style.display = stage.mode === "free" ? "none" : "inline-block";
+
+                const acc = stageStats[stage.id];
+                const pct = acc && acc.attempts ? Math.round(100 * acc.correct / acc.attempts) : 0;
+                document.getElementById("stageAccuracy").textContent = acc && acc.attempts ? (pct + "% this stage") : "";
+            }
+
+            function renderOutput() {
+                const el = document.getElementById("typedOutput");
+                if (buffer.length === 0) {
+                    el.innerHTML = '<span class="cursor">type here…</span>';
+                } else {
+                    el.textContent = buffer;
+                }
+            }
+
+            function handleSuccess() {
+                const stage = stages[currentStageIndex];
+                stageStats[stage.id].correct++;
+                stageStats[stage.id].attempts++;
+                streak++;
+                vibrate([12, 40, 12]);
+                const fb = document.getElementById("feedback");
+                fb.textContent = "Correct ✓";
+                fb.className = "good";
+                setTimeout(nextTarget, 450);
+                renderPrompt();
+            }
+
+            function handleMiss() {
+                const stage = stages[currentStageIndex];
+                stageStats[stage.id].attempts++;
+                streak = 0;
+                vibrate([20, 30, 20, 30, 20]);
+                const fb = document.getElementById("feedback");
+                fb.textContent = (stage.mode === "single") ? "Not quite — try again." : "That's not on track — backspace and try again.";
+                fb.className = "bad";
+                renderPrompt();
+            }
+
+            /** Single check used by both input sources (drag pads and a real
+             *  keyboard typing into #realKeyboardInput) — success when the buffer
+             *  matches the target exactly, a miss as soon as it can no longer lead
+             *  there. Single-character targets are just the length-1 case of the
+             *  same rule as combos/words. */
+            function evaluateBuffer() {
+                const stage = stages[currentStageIndex];
+                if (stage.mode === "free") return;
+                if (buffer === currentTarget) {
+                    handleSuccess();
+                } else if (!currentTarget.startsWith(buffer)) {
+                    handleMiss();
+                }
+            }
+
+            function onPadCommit(padName, ch) {
+                const accent = padName === "consonant" ? "#4A90D9" : "#D98E3A";
+                flashBadge(ch, accent);
+                if (padName === "consonant") bufferCommitConsonant(ch);
+                else bufferCommitVowel(ch);
+                renderOutput();
+                evaluateBuffer();
+            }
+
+            document.getElementById("backspaceBtn").addEventListener("click", () => {
+                bufferBackspace();
+                renderOutput();
+            });
+            document.getElementById("clearBtn").addEventListener("click", () => {
+                buffer = "";
+                renderOutput();
+            });
+            document.getElementById("skipBtn").addEventListener("click", () => {
+                nextTarget();
+            });
+
+            // ---------------------------------------------------------------
+            // Mode toggle: on-screen practice pads vs. a real installed keyboard
+            // ---------------------------------------------------------------
+
+            function setMode(real) {
+                usingRealKeyboard = real;
+                document.getElementById("modePadsBtn").classList.toggle("active", !real);
+                document.getElementById("modeRealBtn").classList.toggle("active", real);
+                document.getElementById("padsRow").style.display = real ? "none" : "flex";
+                buffer = "";
+                const input = document.getElementById("realKeyboardInput");
+                input.value = "";
+                updateLiveBadge(null, "#4A90D9");
+                renderOutput();
+                renderPrompt();
+                if (real) setTimeout(() => input.focus(), 60);
+            }
+
+            document.getElementById("modePadsBtn").addEventListener("click", () => setMode(false));
+            document.getElementById("modeRealBtn").addEventListener("click", () => setMode(true));
+
+            document.getElementById("realKeyboardInput").addEventListener("input", (e) => {
+                buffer = e.target.value;
+                renderOutput();
+                evaluateBuffer();
+            });
+
+            function selectStage(i) {
+                currentStageIndex = i;
+                renderStageNav();
+                nextTarget();
+            }
+
+            // ---------------------------------------------------------------
+            // Wire up the pads
+            // ---------------------------------------------------------------
+
+            const consonantPad = new DragPad(document.getElementById("consonantCanvas"), {
+                groups: CONSONANT_GROUPS,
+                fanStepDeg: 46,
+                fanClockwise: true,
+                accent: "#4A90D9",
+                onCharacter: ch => onPadCommit("consonant", ch),
+                onPreview: ch => updateLiveBadge(ch, "#4A90D9")
+            });
+
+            const vowelPad = new DragPad(document.getElementById("vowelCanvas"), {
+                groups: VOWEL_GROUPS,
+                fanStepDeg: 46,
+                fanClockwise: true,
+                accent: "#D98E3A",
+                onCharacter: ch => onPadCommit("vowel", ch),
+                onPreview: ch => updateLiveBadge(ch, "#D98E3A")
+            });
+
+            renderStageNav();
+            nextTarget();
+
+        })();
+    </script>
+</body>
+
+</html>
