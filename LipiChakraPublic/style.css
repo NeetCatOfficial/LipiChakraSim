@@ -1,0 +1,368 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+Devanagari:wght@500;700&display=swap');
+
+:root{
+    --bg:#F8F5EF;
+    --surface:#FFFDFC;
+
+    --primary:#7B203A;
+    --primary-dark:#5E172C;
+
+    --secondary:#D97706;
+
+    --accent:#234E70;
+
+    --text:#2E2E2E;
+    --muted:#6B7280;
+
+    --border:#E7DCCB;
+
+    --shadow:0 10px 35px rgba(0,0,0,.08);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+nav {
+    text-align: center;
+}
+
+nav a {
+    font-size: 1.2rem;
+    margin: 1rem;
+}
+
+body{
+
+    font-family:Inter,sans-serif;
+
+    background:var(--bg);
+
+    color:var(--text);
+
+    line-height:1.8;
+
+    overflow-x:hidden;
+}
+
+/* Background */
+
+body::before{
+
+    content:"";
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+        radial-gradient(circle at center,
+        rgba(217,119,6,.05),
+        transparent 60%);
+
+    z-index:-2;
+}
+
+body::after{
+
+    content:"क ख ग घ ङ   च छ ज झ ञ   ट ठ ड ढ ण   त थ द ध न   प फ ब भ म";
+
+    position:fixed;
+
+    top:50%;
+
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    font-family:"Noto Serif Devanagari",serif;
+
+    font-size:90px;
+
+    color:rgba(0,0,0,.025);
+
+    white-space:pre;
+
+    line-height:2;
+
+    text-align:center;
+
+    pointer-events:none;
+
+    user-select:none;
+
+    z-index:-1;
+}
+
+/* HERO */
+
+.hero{
+
+    padding:80px 20px 60px;
+
+    text-align:center;
+}
+
+.logo{
+
+    width:140px;
+
+    height:140px;
+
+    object-fit:contain;
+
+    margin-bottom:25px;
+
+    padding:20px;
+
+    background:white;
+
+    border-radius:50%;
+
+    border:2px solid var(--border);
+
+    box-shadow:var(--shadow);
+}
+
+.hero h1{
+
+    font-family:"Noto Serif Devanagari",serif;
+
+    font-size:4rem;
+
+    color:var(--primary);
+
+    letter-spacing:2px;
+
+    margin-bottom:10px;
+}
+
+.tagline{
+
+    font-size:1.25rem;
+
+    max-width:700px;
+
+    margin:auto;
+
+    color:var(--muted);
+}
+
+/* MAIN */
+
+.container{
+
+    width:min(1050px,92%);
+
+    margin:auto;
+
+    padding-bottom:80px;
+}
+
+section{
+
+    background:var(--surface);
+
+    border:1px solid var(--border);
+
+    border-radius:22px;
+
+    padding:45px;
+
+    margin:35px 0;
+
+    box-shadow:var(--shadow);
+}
+
+section h2{
+
+    font-family:"Noto Serif Devanagari",serif;
+
+    color:var(--primary);
+
+    margin-bottom:18px;
+
+    font-size:2rem;
+}
+
+section p{
+
+    margin-bottom:18px;
+
+    color:#444;
+}
+
+ul{
+
+    padding-left:24px;
+}
+
+li{
+
+    margin:10px 0;
+}
+
+/* Divider */
+
+.divider{
+
+    width:120px;
+
+    height:3px;
+
+    background:var(--secondary);
+
+    border-radius:999px;
+
+    margin:25px 0;
+}
+
+/* BUTTONS */
+
+.buttons{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:16px;
+
+    margin-top:30px;
+}
+
+.btn{
+
+    text-decoration:none;
+
+    padding:14px 28px;
+
+    border-radius:999px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+}
+
+.btn-primary{
+
+    background:var(--primary);
+
+    color:white;
+}
+
+.btn-primary:hover{
+
+    background:var(--primary-dark);
+
+    transform:translateY(-2px);
+}
+
+.btn-secondary{
+
+    border:2px solid var(--primary);
+
+    color:var(--primary);
+
+    background:white;
+}
+
+.btn-secondary:hover{
+
+    background:var(--primary);
+
+    color:white;
+}
+
+/* LINKS */
+
+a{
+
+    color:var(--accent);
+
+    text-decoration:none;
+}
+
+a:hover{
+
+    text-decoration:underline;
+}
+
+/* Footer */
+
+footer{
+
+    text-align:center;
+
+    padding:40px;
+
+    color:var(--muted);
+
+    border-top:1px solid var(--border);
+
+    margin-top:40px;
+}
+
+/* Responsive */
+
+@media(max-width:768px){
+
+.hero{
+
+    padding-top:50px;
+}
+
+.hero h1{
+
+    font-size:2.8rem;
+}
+
+.tagline{
+
+    font-size:1.05rem;
+}
+
+.logo{
+
+    width:110px;
+
+    height:110px;
+}
+
+section{
+
+    padding:28px;
+}
+
+section h2{
+
+    font-size:1.6rem;
+}
+
+.buttons{
+
+    flex-direction:column;
+}
+
+.btn{
+
+    width:100%;
+}
+
+body::after{
+
+    font-size:52px;
+}
+
+}
