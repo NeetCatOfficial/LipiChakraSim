@@ -893,6 +893,12 @@
                 const fb = document.getElementById("feedback");
                 fb.textContent = (stage.mode === "single") ? "Not quite — try again." : "That's not on track — backspace and try again.";
                 fb.className = "bad";
+                if (stage.mode === "single") {
+                    buffer = "";
+                    const realInput = document.getElementById("realKeyboardInput");
+                    if (realInput) realInput.value = "";
+                    renderOutput();
+                }
                 renderPrompt();
             }
 
